@@ -1,8 +1,9 @@
 package com.section.datastream.service;
 
-import com.section.datastream.model.Transaction;
+import com.section.datastream.model.TransactionDTO;
 import com.section.datastream.util.CSVUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -21,11 +22,15 @@ public class TransactionsLoader {
 
     private WatchService watchService;
 
-    public TransactionsLoader(@Value("${cron.transactions.dir}") String transactionDir) throws IOException {
+    private TransactionsComputer transactionsComputer;
+
+    public TransactionsLoader(@Value("${cron.transactions.dir}") String transactionDir,
+                              @Autowired TransactionsComputer transactionsComputer) throws IOException {
         watchService = FileSystems.getDefault().newWatchService();
         Path path = Paths.get(transactionDir);
         path.register(watchService,  StandardWatchEventKinds.ENTRY_CREATE);
         this.transactionDir = transactionDir;
+        this.transactionsComputer = transactionsComputer;
     }
 
     @Scheduled(fixedDelayString = "${cron.transactions.fixed.delay}")
@@ -38,14 +43,16 @@ public class TransactionsLoader {
                         "Event kind:" + event.kind()
                                 + ". File affected: " + event.context() + ".");
                 String filePath = transactionDir + "/" + event.context().toString();
-                log.info("Found {}", loadTransactions(filePath));
+                List<TransactionDTO> transactionDTOS = loadTransactions(filePath);
+                log.info("Found {}", transactionDTOS.size());
+                transactionsComputer.addTransactions(transactionDTOS);
             }
             key.reset();
         }
 
     }
 
-    private List<Transaction> loadTransactions(String filePath) throws IOException {
-        return CSVUtil.read(Paths.get(filePath), Transaction.class);
+    private List<TransactionDTO> loadTransactions(String filePath) throws IOException {
+        return CSVUtil.read(Paths.get(filePath), TransactionDTO.class);
     }
 }
