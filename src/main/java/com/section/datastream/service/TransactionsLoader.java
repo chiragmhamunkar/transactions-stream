@@ -17,7 +17,6 @@ import java.util.Objects;
 @Service
 public class TransactionsLoader {
 
-    //@Value("cron.transactions.dir")
     private String transactionDir;
 
     private WatchService watchService;
