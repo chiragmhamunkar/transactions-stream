@@ -22,15 +22,15 @@ public class TransactionsLoader {
 
     private WatchService watchService;
 
-    private TransactionsComputer transactionsComputer;
+    private TransactionService transactionService;
 
     public TransactionsLoader(@Value("${cron.transactions.dir}") String transactionDir,
-                              @Autowired TransactionsComputer transactionsComputer) throws IOException {
+                              @Autowired TransactionService transactionService) throws IOException {
         watchService = FileSystems.getDefault().newWatchService();
         Path path = Paths.get(transactionDir);
         path.register(watchService,  StandardWatchEventKinds.ENTRY_CREATE);
         this.transactionDir = transactionDir;
-        this.transactionsComputer = transactionsComputer;
+        this.transactionService = transactionService;
     }
 
     @Scheduled(fixedDelayString = "${cron.transactions.fixed.delay}")
@@ -45,7 +45,7 @@ public class TransactionsLoader {
                 String filePath = transactionDir + "/" + event.context().toString();
                 List<TransactionDTO> transactionDTOS = loadTransactions(filePath);
                 log.info("Found {}", transactionDTOS.size());
-                transactionsComputer.addTransactions(transactionDTOS);
+                transactionService.addTransactions(transactionDTOS);
             }
             key.reset();
         }

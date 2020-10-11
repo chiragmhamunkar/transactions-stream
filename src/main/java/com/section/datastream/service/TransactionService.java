@@ -7,31 +7,27 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
+import javax.swing.text.html.Option;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class TransactionsComputer {
-
-    private final Map<Integer, Product> productsById;
-
+public class TransactionService {
     private final ConcurrentHashMap<Integer, Transaction> transactionById
             = new ConcurrentHashMap<>();
 
-    public TransactionsComputer(@Autowired ProductsService productsService) throws IOException {
-        List<Product> products = productsService.fetchProducts();
-        log.info("Found {} products", products.size());
-        productsById = products.stream().collect(Collectors.toMap(p -> p.getProductId(),p -> p));
-    }
+    @Autowired
+    private ProductTransactionsBI productTransactionsBI;
+    @Autowired
+    private ProductService productService;
 
     public void addTransactions(List<TransactionDTO> transactionDTOS){
         List<Transaction> transactions = transactionDTOS
                 .stream()
-                .map(this::transFormAnnEnrich)
+                .map(this::transFormAndEnrich)
                 .collect(Collectors.toList());
         add(transactions);
     }
@@ -39,16 +35,18 @@ public class TransactionsComputer {
     private void add(List<Transaction> transactions){
         log.info("Adding {} transactions", transactions.size());
         transactions.forEach(t -> transactionById.put(t.getTransactionId(), t));
+        transactions.forEach(productTransactionsBI:: addTransaction);
     }
 
-    private Transaction transFormAnnEnrich(TransactionDTO transactionDTO){
+    private Transaction transFormAndEnrich(TransactionDTO transactionDTO){
         Transaction transaction = transactionDTO.toModel();
-        transaction.setProduct(productsById.get(transaction.getProductId()));
+        Product product = productService.findById(transaction.getProductId()).orElseThrow(() -> new RuntimeException("No product fond for product id in transaction"));
+        transaction.setProduct(product);
         return transaction;
     }
 
-    public Transaction fetchTransactionById(int id){
-        return transactionById.get(id);
+    public Optional<Transaction> fetchTransactionById(int id){
+        return Optional.ofNullable(transactionById.get(id));
     }
 
     public List<Transaction> fetchAllTransactions(){
