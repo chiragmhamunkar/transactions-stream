@@ -20,7 +20,7 @@ import java.util.stream.Stream;
  * retrieval of aggregated queries is faster
  */
 @Service
-public class ProductTransactionsBI {
+public class BISummaryService {
 
     @Autowired
     ProductService productService;

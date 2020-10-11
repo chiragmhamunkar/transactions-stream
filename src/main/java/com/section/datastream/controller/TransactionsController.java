@@ -4,7 +4,7 @@ import com.section.datastream.exception.NoTransactionFound;
 import com.section.datastream.model.Transaction;
 import com.section.datastream.model.summary.CitySummary;
 import com.section.datastream.model.summary.ProductSummary;
-import com.section.datastream.service.ProductTransactionsBI;
+import com.section.datastream.service.BISummaryService;
 import com.section.datastream.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,7 +21,7 @@ public class TransactionsController {
     private TransactionService transactionService;
 
     @Autowired
-    private ProductTransactionsBI productTransactionsBI;
+    private BISummaryService BISummaryService;
 
     @GetMapping
     public List<Transaction> fetchTransactions(){
@@ -36,12 +36,12 @@ public class TransactionsController {
 
     @GetMapping("/summaryByProducts/{lastNDays}")
     public List<ProductSummary> summaryByProducts(@PathVariable("lastNDays") int lastNDays){
-        return productTransactionsBI.summaryByProductsForLastNDays(lastNDays);
+        return BISummaryService.summaryByProductsForLastNDays(lastNDays);
     }
 
     @GetMapping("/summaryByCities/{lastNDays}")
     public List<CitySummary> summaryByCities(@PathVariable("lastNDays") int lastNDays){
-        return productTransactionsBI.summaryByCitiesForLastNDays(lastNDays);
+        return BISummaryService.summaryByCitiesForLastNDays(lastNDays);
     }
 
     @ExceptionHandler(value = NoTransactionFound.class)

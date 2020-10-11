@@ -16,7 +16,7 @@ import java.util.Objects;
 
 @Slf4j
 @Service
-public class TransactionsLoader {
+public class TransactionsCronLoader {
 
     private String transactionDir;
 
@@ -24,8 +24,8 @@ public class TransactionsLoader {
 
     private TransactionService transactionService;
 
-    public TransactionsLoader(@Value("${cron.transactions.dir}") String transactionDir,
-                              @Autowired TransactionService transactionService) throws IOException {
+    public TransactionsCronLoader(@Value("${cron.transactions.dir}") String transactionDir,
+                                  @Autowired TransactionService transactionService) throws IOException {
         watchService = FileSystems.getDefault().newWatchService();
         Path path = Paths.get(transactionDir);
         path.register(watchService,  StandardWatchEventKinds.ENTRY_CREATE);

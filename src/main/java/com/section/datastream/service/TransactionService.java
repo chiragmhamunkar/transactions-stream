@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,7 +19,7 @@ public class TransactionService {
             = new ConcurrentHashMap<>();
 
     @Autowired
-    private ProductTransactionsBI productTransactionsBI;
+    private BISummaryService BISummaryService;
     @Autowired
     private ProductService productService;
 
@@ -35,7 +34,7 @@ public class TransactionService {
     private void add(List<Transaction> transactions){
         log.info("Adding {} transactions", transactions.size());
         transactions.forEach(t -> transactionById.put(t.getTransactionId(), t));
-        transactions.forEach(productTransactionsBI:: addTransaction);
+        transactions.forEach(BISummaryService:: addTransaction);
     }
 
     private Transaction transFormAndEnrich(TransactionDTO transactionDTO){
