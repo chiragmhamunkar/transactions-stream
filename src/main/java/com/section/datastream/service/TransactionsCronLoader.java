@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.time.Instant;
@@ -31,6 +32,7 @@ public class TransactionsCronLoader {
         path.register(watchService,  StandardWatchEventKinds.ENTRY_CREATE);
         this.transactionDir = transactionDir;
         this.transactionService = transactionService;
+        init();
     }
 
     @Scheduled(fixedDelayString = "${cron.transactions.fixed.delay}")
@@ -54,5 +56,14 @@ public class TransactionsCronLoader {
 
     private List<TransactionDTO> loadTransactions(String filePath) throws IOException {
         return CSVUtil.read(Paths.get(filePath), TransactionDTO.class);
+    }
+
+    private void init() throws IOException {
+        log.info("Loading transactions from existing files into system");
+        File dir = new File(transactionDir);
+        for(File file: dir.listFiles()){
+            log.info("Loading from {}", file.getName());
+            transactionService.addTransactions(loadTransactions(transactionDir + "/" + file.getName()));
+        }
     }
 }
